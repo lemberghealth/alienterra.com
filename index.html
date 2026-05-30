@@ -1,284 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AlienTerra</title>
 
-<link
-rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
 
 <style>
 
+:root{
+  --bg:#04101f;
+  --text:#E6F1FB;
+  --muted:#85B7EB;
+  --blue:#185FA5;
+  --teal:#1D9E75;
+  --mono:'Space Mono', monospace;
+  --sans:'Barlow', sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
 body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#050d17;
-    color:white;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
 }
 
-header{
-    text-align:center;
-    padding:40px 20px;
+/* HERO (your existing section) */
+.hero{
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  position:relative;
 }
 
-h1{
-    font-size:3rem;
-    margin-bottom:10px;
+/* FIX: no more overflow hidden */
+
+/* APP SECTION */
+.app{
+  padding:60px 20px;
+  max-width:1100px;
+  margin:auto;
 }
 
-.subtitle{
-    color:#9ac4ff;
-}
-
+/* MAP */
 #map{
-    height:500px;
-    width:100%;
+  height:520px;
+  border-radius:16px;
+  margin-top:30px;
+  border:1px solid rgba(255,255,255,0.1);
 }
 
-.container{
-    max-width:900px;
-    margin:auto;
-    padding:30px;
+/* STATS */
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin:30px 0;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--muted);
 }
 
+/* FORM */
 form{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
+  display:grid;
+  gap:12px;
+  margin-top:40px;
 }
 
 input, textarea{
-    padding:12px;
-    border:none;
-    border-radius:8px;
+  padding:12px;
+  border-radius:10px;
+  border:none;
 }
 
 button{
-    padding:14px;
-    border:none;
-    border-radius:8px;
-    background:#1b78ff;
-    color:white;
-    cursor:pointer;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  background:var(--blue);
+  color:white;
+  cursor:pointer;
 }
 
-button:hover{
-    opacity:0.9;
-}
+button:hover{opacity:0.85;}
 
-.success{
-    color:#63ff8f;
+.section-title{
+  font-size:20px;
+  margin-top:30px;
 }
 
 </style>
 </head>
+
 <body>
 
-<header>
+<!-- HERO -->
+<div class="hero">
+  <div>
+    <h1>Millions look up. Few report what they see.</h1>
+    <p style="color:var(--muted);margin-top:10px;">
+      AlienTerra is building the world’s largest registry of unexplained sightings.
+    </p>
+    <button style="margin-top:20px;">Report a Sighting</button>
+  </div>
+</div>
 
-<h1>Millions look up. Few report what they see.</h1>
+<!-- APP -->
+<div class="app">
 
-<p class="subtitle">
-AlienTerra is building the world's largest registry of unexplained sightings.
-</p>
-
-</header>
+<div class="stats">
+  <div>14,382 Sightings</div>
+  <div>92 Countries</div>
+  <div>37 Active Investigations</div>
+</div>
 
 <div id="map"></div>
 
-<div class="container">
+<h2 class="section-title">Report a Sighting</h2>
 
-<h2>Report a Sighting</h2>
+<form id="form">
 
-<form id="sightingForm">
+<input id="address" placeholder="Enter address"/>
 
-<input
-type="text"
-id="address"
-placeholder="Address"
-/>
+<button type="button" onclick="getGPS()">Use My GPS Location</button>
 
-<input
-type="datetime-local"
-id="sighting_time"
-/>
+<input type="datetime-local" id="time"/>
 
-<textarea
-id="description"
-rows="6"
-placeholder="Describe what you witnessed..."
-required
-></textarea>
+<textarea id="desc" rows="5" placeholder="Describe what you saw"></textarea>
 
-<input
-type="email"
-id="email"
-placeholder="Email (optional)"
-/>
+<input type="email" id="email" placeholder="Email (optional)"/>
 
-<input
-type="hidden"
-id="latitude"
-/>
+<input type="hidden" id="lat"/>
+<input type="hidden" id="lng"/>
 
-<input
-type="hidden"
-id="longitude"
-/>
-
-<button type="button" onclick="getLocation()">
-Use My GPS Location
-</button>
-
-<button type="submit">
-Submit Sighting
-</button>
+<button type="submit">Submit</button>
 
 </form>
 
-<p id="message"></p>
+<p id="msg"></p>
 
 </div>
 
+<!-- LIBS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- GOOGLE PLACES -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY&libraries=places"></script>
 
 <script>
 
-const SUPABASE_URL =
-"https://tjvsqawdnvznchsgrvqu.supabase.co";
-
-const SUPABASE_KEY =
-"sb_publishable_ppVSsjXXHfKfZrWnzrXthA_yMReoGXo";
-
-const supabase =
-window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
+/* SUPABASE */
+const supabase = window.supabase.createClient(
+  "https://tjvsqawdnvznchsgrvqu.supabase.co",
+  "sb_publishable_ppVSsjXXHfKfZrWnzrXthA_yMReoGXo"
 );
 
+/* MAP */
 const map = L.map('map').setView([20,0],2);
 
-L.tileLayer(
-'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-{
-maxZoom:19
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19
+}).addTo(map);
+
+const cluster = L.markerClusterGroup();
+map.addLayer(cluster);
+
+let heatData = [];
+
+/* LOAD DATA */
+async function load(){
+  const {data} = await supabase
+    .from('sightings')
+    .select('*')
+    .eq('status','approved');
+
+  data.forEach(r=>{
+    const m = L.marker([r.latitude,r.longitude]);
+    m.bindPopup(r.description || "Sighting");
+    cluster.addLayer(m);
+
+    heatData.push([r.latitude,r.longitude,1]);
+  });
+
+  L.heatLayer(heatData,{radius:25}).addTo(map);
 }
-).addTo(map);
+load();
 
-loadSightings();
+/* GPS FIXED */
+async function getGPS(){
 
-async function loadSightings(){
+  if(!navigator.geolocation){
+    alert("No GPS");
+    return;
+  }
 
-    const { data, error } = await supabase
-        .from('sightings')
-        .select('*')
-        .eq('status','approved');
+  navigator.geolocation.getCurrentPosition(async pos=>{
 
-    if(error){
-        console.error(error);
-        return;
-    }
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
 
-    data.forEach(row => {
+    document.getElementById("lat").value = lat;
+    document.getElementById("lng").value = lng;
 
-        L.marker([
-            row.latitude,
-            row.longitude
-        ])
-        .addTo(map)
-        .bindPopup(`
-            <strong>Sighting</strong><br>
-            ${row.description}
-        `);
-
-    });
-
-}
-
-function getLocation(){
-
-    if(!navigator.geolocation){
-        alert("GPS not supported");
-        return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-        function(position){
-
-            document.getElementById('latitude').value =
-                position.coords.latitude;
-
-            document.getElementById('longitude').value =
-                position.coords.longitude;
-
-            alert("Location captured.");
-
-        },
-        function(){
-            alert("Unable to get location.");
-        }
+    // reverse geocode
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
     );
 
+    const d = await r.json();
+
+    document.getElementById("address").value =
+      d.display_name || "";
+
+    alert("Location captured");
+
+  });
+
 }
 
-document
-.getElementById('sightingForm')
-.addEventListener('submit', async function(e){
+/* GOOGLE AUTOCOMPLETE */
+const ac = new google.maps.places.Autocomplete(
+  document.getElementById("address")
+);
 
-    e.preventDefault();
+/* SUBMIT */
+document.getElementById("form").addEventListener("submit",async e=>{
+  e.preventDefault();
 
-    const payload = {
+  await supabase.from("sightings").insert({
+    address:document.getElementById("address").value,
+    latitude:parseFloat(document.getElementById("lat").value),
+    longitude:parseFloat(document.getElementById("lng").value),
+    sighting_time:document.getElementById("time").value,
+    description:document.getElementById("desc").value,
+    email:document.getElementById("email").value,
+    status:"pending"
+  });
 
-        address:
-            document.getElementById('address').value,
-
-        latitude:
-            parseFloat(
-                document.getElementById('latitude').value
-            ),
-
-        longitude:
-            parseFloat(
-                document.getElementById('longitude').value
-            ),
-
-        sighting_time:
-            document.getElementById('sighting_time').value,
-
-        description:
-            document.getElementById('description').value,
-
-        email:
-            document.getElementById('email').value,
-
-        status:'pending'
-    };
-
-    const { error } = await supabase
-        .from('sightings')
-        .insert(payload);
-
-    if(error){
-
-        console.error(error);
-
-        document.getElementById('message').innerHTML =
-            "Submission failed.";
-
-        return;
-    }
-
-    document.getElementById('message').innerHTML =
-        "Sighting submitted successfully.";
-
-    document.getElementById('sightingForm').reset();
-
+  document.getElementById("msg").innerText="Submitted!";
 });
 
 </script>
