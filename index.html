@@ -329,23 +329,6 @@
   <!-- SIGHTINGS + MAP -->
   <section id="sightings">
     <div class="section-inner">
-      <p class="section-label">// What We Do</p>
-      <h2>A full-spectrum<br><span class="accent">investigation platform</span></h2>
-      <div class="cards-grid">
-        <div class="card"><span class="card-icon">🛸</span><h3>Sighting Database</h3>
-          <p>Every verified event is catalogued with coordinates, timestamp, witness count, and anomaly classification — searchable and open to the community.</p></div>
-        <div class="card"><span class="card-icon">📡</span><h3>Real-Time Tracking</h3>
-          <p>Cross-referenced against FAA, ADS-B, and military airspace data to flag movements that don't match any known aircraft profile.</p></div>
-        <div class="card"><span class="card-icon">🔬</span><h3>Pattern Analysis</h3>
-          <p>Machine-learning models identify clustering, hotspots, and temporal correlations across thousands of sightings simultaneously.</p></div>
-        <div class="card"><span class="card-icon">👁</span><h3>Witness Reports</h3>
-          <p>Structured intake forms capture metadata beyond the naked eye — compass bearings, duration, maneuver type, and electromagnetic effects.</p></div>
-        <div class="card"><span class="card-icon">🌐</span><h3>Global Network</h3>
-          <p>Volunteer observers in 94 countries submit nightly sky reports, building a continuous planetary watch grid no single agency can match.</p></div>
-        <div class="card"><span class="card-icon">📰</span><h3>Open Research</h3>
-          <p>All findings are published publicly. No paywalls, no government filters — just raw data and honest analysis shared with the world.</p></div>
-      </div>
-
       <!-- LIVE MAP -->
       <div class="map-wrap">
         <div class="map-overlay-label">// Live Sighting Map</div>
@@ -381,11 +364,10 @@
             <th>Location</th>
             <th>Object Type</th>
             <th>Duration</th>
-            <th>Notes</th>
           </tr>
         </thead>
         <tbody id="recent-tbody">
-          <tr class="loading-row"><td colspan="5">Loading data…</td></tr>
+          <tr class="loading-row"><td colspan="4">Loading data…</td></tr>
         </tbody>
       </table>
     </div>
@@ -472,12 +454,7 @@
   <footer>
     <div class="footer-brand">ALIEN<span style="color:#1a6ee8">TERRA</span></div>
     <div class="footer-copy">© 2025 AlienTerra. We Watch The Skies.</div>
-    <div class="footer-links">
-      <a href="#">Privacy</a>
-      <a href="#">Data Policy</a>
-      <a href="#">Contact</a>
-      <a href="https://github.com/alienterra/alienterra.com" target="_blank">GitHub</a>
-    </div>
+
   </footer>
 
 </div>
@@ -612,7 +589,7 @@
 
     const tbody = document.getElementById('recent-tbody');
     if (!rows || rows.length === 0) {
-      tbody.innerHTML = '<tr class="loading-row"><td colspan="5">No reports yet — be the first to submit.</td></tr>';
+      tbody.innerHTML = '<tr class="loading-row"><td colspan="4">No reports yet — be the first to submit.</td></tr>';
       return;
     }
     tbody.innerHTML = rows.map(r => {
@@ -620,8 +597,7 @@
       const loc  = r.location_label ? r.location_label.split(',').slice(0,2).join(',') : '—';
       const type = r.object_type ? '<span class="type-badge">'+r.object_type+'</span>' : '<span style="color:#3a6070">—</span>';
       const dur  = r.duration || '—';
-      const desc = r.description ? r.description.substring(0,80)+(r.description.length>80?'…':'') : '—';
-      return '<tr><td>'+dt+'</td><td>'+loc+'</td><td>'+type+'</td><td>'+dur+'</td><td>'+desc+'</td></tr>';
+      return '<tr><td>'+dt+'</td><td>'+loc+'</td><td>'+type+'</td><td>'+dur+'</td></tr>';
     }).join('');
   }
 
