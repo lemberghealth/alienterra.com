@@ -141,13 +141,7 @@
     .btn-outline { background: transparent; border: 1px solid var(--blue); color: var(--blue); }
     .btn-outline:hover { background: rgba(26,110,232,0.1); box-shadow: 0 0 20px rgba(26,110,232,0.3); transform: translateY(-2px); }
 
-    /* TICKER */
-    .ticker-wrap { background: rgba(0,232,154,0.06); border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border); overflow: hidden; padding: 10px 0; }
-    .ticker { display: flex; gap: 60px; white-space: nowrap; animation: ticker 28s linear infinite; }
-    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-    .ticker-item { font-family: 'Space Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--teal); text-transform: uppercase; }
-    .ticker-dot { color: var(--green); margin-right: 8px; }
+
 
     /* SECTIONS */
     section { position: relative; z-index: 1; }
@@ -226,8 +220,7 @@
 
     /* REPORT SECTION */
     .report-section { background: rgba(7,15,30,0.8); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .report-inner { max-width: 1100px; margin: 0 auto; padding: 100px 40px;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    .report-inner { max-width: 680px; margin: 0 auto; padding: 80px 40px; }
 
     /* FORM */
     .form-group { margin-bottom: 20px; }
@@ -300,30 +293,36 @@
 
     @media (max-width: 768px) {
       nav { padding: 0 20px; } nav ul { display: none; }
-      .section-inner { padding: 72px 20px; }
+      .section-inner { padding: 40px 20px; }
       .report-inner { grid-template-columns: 1fr; gap: 48px; padding: 60px 20px; }
-      footer { padding: 40px 20px 24px; flex-direction: column; text-align: center; }
+      footer { padding: 32px 20px 20px; flex-direction: column; text-align: center; }
 
-      /* Hero: tighter top padding + smaller logo so CTA is above the fold */
-      .hero { padding: 28px 20px 40px; min-height: unset; }
-      .hero-logo { width: 140px; height: 140px; margin-bottom: 20px; }
-      .hero-eyebrow { font-size: 0.6rem; margin-bottom: 8px; }
-      .hero-title { font-size: 2.6rem; margin-bottom: 8px; }
-      .hero-sub { font-size: 0.8rem; margin-bottom: 12px; }
-      .hero-tagline { font-size: 0.72rem; padding: 10px 14px; margin-bottom: 24px; }
-      .btn { padding: 12px 24px; font-size: 0.82rem; }
+      /* Hero: fill the viewport, logo + button centred and prominent */
+      .hero {
+        min-height: calc(100vh - 72px);
+        padding: 0 20px;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .hero-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
+      .hero-logo { width: 220px; height: 220px; margin-bottom: 20px; }
+      .hero-eyebrow { display: none; }
+      .hero-sub { display: none; }
+      .hero-tagline { display: none; }
+      .hero-title { font-size: 2.8rem; margin-bottom: 18px; }
+      .btn { padding: 16px 40px; font-size: 1rem; width: 100%; text-align: center; }
+      .btn-row { width: 100%; }
 
-      /* Stats: 2×2 grid instead of single column */
-      .stats-grid { grid-template-columns: 1fr 1fr; margin-top: 36px; }
-      .stat-card { padding: 20px 12px; border-right: 1px solid var(--border); }
+      /* Stats: 2×2 grid */
+      .stats-grid { grid-template-columns: 1fr 1fr; margin-top: 24px; }
+      .stat-card { padding: 18px 10px; border-right: 1px solid var(--border); }
       .stat-card:nth-child(2) { border-right: none; }
       .stat-card:nth-child(3) { border-right: 1px solid var(--border); }
-      .stat-num { font-size: 2rem; }
+      .stat-num { font-size: 1.8rem; }
 
-      /* Research stats: 2×3 grid to mirror */
-      .research-stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 32px; }
-      .r-stat { padding: 16px 12px; }
-      .r-stat-num { font-size: 1.6rem; }
+      /* Research stats: mirror 2×2 */
+      .research-stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+      .r-stat { padding: 14px 10px; }
+      .r-stat-num { font-size: 1.5rem; }
     }
   </style>
 </head>
@@ -359,19 +358,7 @@
     </div>
   </section>
 
-  <!-- TICKER -->
-  <div class="ticker-wrap">
-    <div class="ticker">
-      <span class="ticker-item"><span class="ticker-dot">◆</span>LIVE MONITORING ACTIVE</span>
-      <span class="ticker-item"><span class="ticker-dot">◆</span>RADAR GRID ONLINE</span>
-      <span class="ticker-item"><span class="ticker-dot">◆</span>ANOMALY CLASS: DELTA</span>
-      <span class="ticker-item"><span class="ticker-dot">◆</span>NETWORK: NORTH AMERICA / EUROPE</span>
-      <span class="ticker-item"><span class="ticker-dot">◆</span>LIVE MONITORING ACTIVE</span>
-      <span class="ticker-item"><span class="ticker-dot">◆</span>RADAR GRID ONLINE</span>
-      <span class="ticker-item"><span class="ticker-dot">◆</span>ANOMALY CLASS: DELTA</span>
-      <span class="ticker-item"><span class="ticker-dot">◆</span>NETWORK: NORTH AMERICA / EUROPE</span>
-    </div>
-  </div>
+
 
   <!-- ABOUT -->
   <section id="about">
@@ -440,19 +427,6 @@
   <!-- REPORT FORM -->
   <section class="report-section" id="report">
     <div class="report-inner">
-      <div>
-        <p class="section-label">// Submit Report</p>
-        <h2>Report a<br><span class="accent">sighting</span></h2>
-        <p class="lead" style="margin-bottom:32px;">Every report matters. Even if you're uncertain,
-          submit what you saw — pattern data is built from exactly these moments.</p>
-        <div class="status-box">
-          <div class="status-title">// System Status</div>
-          <div class="status-item"><span class="dot"></span> Intake server online</div>
-          <div class="status-item"><span class="dot blue"></span> Cross-reference database synced</div>
-          <div class="status-item"><span class="dot amber"></span> Radar API — partial coverage</div>
-        </div>
-      </div>
-
       <div>
         <div class="form-group">
           <label for="sighting-date">Date &amp; Time of Sighting</label>
