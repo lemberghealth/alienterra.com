@@ -12,68 +12,70 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing:border-box; margin:0; padding:0; }
 
 :root {
   --bg:#04101f;
   --text:#E6F1FB;
   --muted:#85B7EB;
   --teal:#5DCAA5;
-  --blue:#185FA5;
-  --sans:'Barlow', sans-serif;
   --mono:'Space Mono', monospace;
+  --sans:'Barlow', sans-serif;
 }
 
-html, body {
-  height: 100%;
-  width: 100%;
-  background: var(--bg);
-  font-family: var(--sans);
-  color: var(--text);
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
 }
 
+/* HERO */
 .hero {
-  min-height: 50vh;
+  min-height:40vh;
   display:flex;
-  align-items:center;
-  justify-content:center;
   flex-direction:column;
+  justify-content:center;
+  align-items:center;
   text-align:center;
   padding:40px;
 }
 
 .tagline {
-  color: var(--muted);
-  font-family: var(--mono);
-  margin-top: 12px;
+  color:var(--muted);
+  font-family:var(--mono);
+  margin-top:10px;
 }
 
 .cta {
-  margin-top: 20px;
-  padding: 14px 20px;
-  background: var(--teal);
+  margin-top:20px;
+  padding:12px 18px;
+  background:var(--teal);
   border:none;
-  border-radius: 8px;
+  border-radius:8px;
   cursor:pointer;
   font-weight:700;
 }
 
+/* MAP */
 #mapSection {
-  height: 60vh;
-  padding: 20px;
+  height:70vh;
+  padding:20px;
 }
 
 #map {
-  height: 100%;
-  border-radius: 12px;
+  width:100%;
+  height:100%;
+  min-height:400px;
+  border-radius:12px;
 }
 
+/* FORM */
 #formSection {
-  padding: 60px 20px;
+  padding:60px 20px;
 }
 
 form {
-  max-width: 520px;
+  max-width:520px;
   margin:auto;
   display:flex;
   flex-direction:column;
@@ -84,17 +86,8 @@ input, textarea {
   padding:12px;
   border-radius:8px;
   border:1px solid rgba(255,255,255,0.1);
-  background: rgba(0,0,0,0.35);
+  background:rgba(0,0,0,0.35);
   color:white;
-}
-
-button {
-  padding:12px;
-  background: var(--teal);
-  border:none;
-  border-radius:8px;
-  font-weight:700;
-  cursor:pointer;
 }
 
 .row {
@@ -104,6 +97,15 @@ button {
 
 .row input {
   flex:1;
+}
+
+button {
+  padding:12px;
+  background:var(--teal);
+  border:none;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -116,7 +118,7 @@ button {
   <div class="tagline">AlienTerra — live sightings intelligence network</div>
 
   <button class="cta" onclick="document.getElementById('mapSection').scrollIntoView({behavior:'smooth'})">
-    View Live Map
+    View Map
   </button>
 </section>
 
@@ -133,13 +135,12 @@ button {
     <input id="title" placeholder="What did you see?" required />
     <textarea id="description" placeholder="Describe it..." required></textarea>
 
-    <!-- GPS + Address -->
     <div class="row">
-      <input id="address" placeholder="Location (auto-filled)" readonly />
+      <input id="address" placeholder="Auto location" readonly />
       <button type="button" id="gpsBtn">📍 GPS</button>
     </div>
 
-    <button type="submit">Submit Report</button>
+    <button type="submit">Submit</button>
   </form>
 </section>
 
@@ -147,75 +148,52 @@ button {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-/* ───────────────── SUPABASE ───────────────── */
+/* ================= SUPABASE ================= */
 const supabaseUrl = "YOUR_SUPABASE_URL";
 const supabaseKey = "YOUR_SUPABASE_ANON_KEY";
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-/* ───────────────── MAP ───────────────── */
-const map = L.map('map').setView([20,0], 2);
+/* ================= MAP INIT (FIXED) ================= */
+let map;
+let markers = {};
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  attribution:'© OpenStreetMap'
-}).addTo(map);
+function initMap() {
+  map = L.map('map').setView([20,0], 2);
 
-const markers = {};
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
 
-/* ───────────────── LOAD DATA ───────────────── */
-async function loadSightings() {
-  const { data, error } = await supabase
-    .from('sightings')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) return console.error(error);
-
-  data.forEach(addMarker);
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 500);
 }
 
-/* ───────────────── MARKERS ───────────────── */
-function addMarker(s) {
-  if (!s.lat || !s.lng || markers[s.id]) return;
+setTimeout(initMap, 100);
 
-  const marker = L.marker([s.lat, s.lng])
-    .addTo(map)
-    .bindPopup(`
-      <b>${s.title}</b><br/>
-      ${s.description || ''}<br/>
-      <small>${s.address || ''}</small>
-    `);
-
-  markers[s.id] = marker;
-}
-
-/* ───────────────── INSERT ───────────────── */
-async function insertSighting(data) {
-  const { error } = await supabase
-    .from('sightings')
-    .insert([data]);
-
-  if (error) {
-    console.error(error);
-    alert("Error submitting sighting");
-  }
-}
-
-/* ───────────────── REVERSE GEOCODE ───────────────── */
+/* ================= REVERSE GEOCODE ================= */
 async function reverseGeocode(lat, lng) {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
     );
     const data = await res.json();
-    return data.display_name || "Unknown location";
+    return data?.display_name || "Unknown location";
   } catch {
     return "Unknown location";
   }
 }
 
-/* ───────────────── GPS BUTTON ───────────────── */
-document.getElementById('gpsBtn').addEventListener('click', async () => {
+/* ================= GPS ================= */
+document.getElementById('gpsBtn').addEventListener('click', () => {
+
+  if (!navigator.geolocation) {
+    alert("GPS not supported");
+    return;
+  }
+
   navigator.geolocation.getCurrentPosition(async (pos) => {
+
     window.userLat = pos.coords.latitude;
     window.userLng = pos.coords.longitude;
 
@@ -223,45 +201,87 @@ document.getElementById('gpsBtn').addEventListener('click', async () => {
 
     L.marker([window.userLat, window.userLng])
       .addTo(map)
-      .bindPopup("You are here");
+      .bindPopup("You are here")
+      .openPopup();
 
     const addr = await reverseGeocode(window.userLat, window.userLng);
     document.getElementById('address').value = addr;
 
   }, (err) => {
-    alert("GPS failed: " + err.message);
+    alert("GPS error: " + err.message);
+  }, {
+    enableHighAccuracy:true,
+    timeout:10000
   });
 });
 
-/* ───────────────── FORM SUBMIT ───────────────── */
+/* ================= SUPABASE FETCH ================= */
+async function loadSightings() {
+  const { data, error } = await supabase
+    .from('sightings')
+    .select('*')
+    .order('created_at', { ascending:false });
+
+  if (error) return console.error(error);
+
+  data.forEach(addMarker);
+}
+
+/* ================= MARKERS ================= */
+function addMarker(s) {
+  if (!s.lat || !s.lng || markers[s.id]) return;
+
+  const m = L.marker([s.lat, s.lng])
+    .addTo(map)
+    .bindPopup(`
+      <b>${s.title}</b><br/>
+      ${s.description || ''}<br/>
+      <small>${s.address || ''}</small>
+    `);
+
+  markers[s.id] = m;
+}
+
+/* ================= INSERT ================= */
+async function insertSighting(data) {
+  const { error } = await supabase
+    .from('sightings')
+    .insert([data]);
+
+  if (error) {
+    console.error(error);
+    alert("Insert failed");
+  }
+}
+
+/* ================= FORM ================= */
 document.getElementById('sightingForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const data = {
-    title: document.getElementById('title').value,
-    description: document.getElementById('description').value,
-    address: document.getElementById('address').value,
+    title: title.value,
+    description: description.value,
+    address: address.value,
     lat: window.userLat || null,
     lng: window.userLng || null
   };
 
   await insertSighting(data);
 
-  alert("Sighting submitted");
-
+  alert("Submitted!");
   loadSightings();
 });
 
-/* ───────────────── REALTIME UPDATES ───────────────── */
+/* ================= REALTIME ================= */
 supabase
-  .channel('live-sightings')
+  .channel('live')
   .on('postgres_changes',
-    { event: 'INSERT', schema: 'public', table: 'sightings' },
+    { event:'INSERT', schema:'public', table:'sightings' },
     (payload) => addMarker(payload.new)
   )
   .subscribe();
 
-/* ───────────────── INIT ───────────────── */
+/* ================= START ================= */
 loadSightings();
 
 </script>
