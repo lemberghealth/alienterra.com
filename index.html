@@ -1,187 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AlienTerra</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AlienTerra</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet"/>
 
-  <!-- Leaflet (map engine) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg:#04101f;
-      --text:#E6F1FB;
-      --muted:#85B7EB;
-      --teal:#5DCAA5;
-      --blue:#185FA5;
-      --sans:'Barlow', sans-serif;
-      --mono:'Space Mono', monospace;
-    }
+:root {
+  --bg:#04101f;
+  --text:#E6F1FB;
+  --muted:#85B7EB;
+  --teal:#5DCAA5;
+  --blue:#185FA5;
+  --sans:'Barlow', sans-serif;
+  --mono:'Space Mono', monospace;
+}
 
-    html, body {
-      height: 100%;
-      width: 100%;
-      overflow: auto; /* FIX: enable app flow */
-      background: var(--bg);
-      font-family: var(--sans);
-    }
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  background: var(--bg);
+  font-family: var(--sans);
+  color: var(--text);
+}
 
-    /* ───────────────── HERO BACKGROUND ───────────────── */
-    .stars {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-    }
+.hero {
+  min-height: 60vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  padding:40px;
+}
 
-    .glow {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(120px);
-      pointer-events: none;
-      z-index: 0;
-    }
+.tagline {
+  color: var(--muted);
+  font-family: var(--mono);
+  margin-top: 12px;
+}
 
-    .glow-a {
-      width: 500px;
-      height: 500px;
-      background: rgba(24,95,165,0.18);
-      top: -100px;
-      left: -100px;
-    }
+.cta {
+  margin-top: 20px;
+  padding: 14px 20px;
+  background: var(--teal);
+  border:none;
+  border-radius: 8px;
+  cursor:pointer;
+  font-weight:700;
+}
 
-    .glow-b {
-      width: 400px;
-      height: 400px;
-      background: rgba(93,202,165,0.14);
-      bottom: -80px;
-      right: -80px;
-    }
+#mapSection {
+  height: 70vh;
+  padding: 20px;
+}
 
-    body::after {
-      content:'';
-      position: fixed;
-      inset:0;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent 0px,
-        transparent 3px,
-        rgba(0,0,0,0.07) 3px,
-        rgba(0,0,0,0.07) 4px
-      );
-      pointer-events:none;
-      z-index:1;
-    }
+#map {
+  height: 100%;
+  border-radius: 12px;
+}
 
-    /* ───────────────── HERO ───────────────── */
-    .hero {
-      min-height: 100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position: relative;
-      z-index:2;
-      text-align:center;
-      flex-direction:column;
-      padding: 40px;
-    }
+#formSection {
+  padding: 60px 20px;
+}
 
-    .tagline {
-      color: var(--muted);
-      font-family: var(--mono);
-      margin-top: 20px;
-      font-size: 12px;
-      letter-spacing: 2px;
-    }
+form {
+  max-width: 500px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
 
-    .cta {
-      margin-top: 30px;
-      padding: 14px 22px;
-      background: var(--teal);
-      border:none;
-      border-radius: 8px;
-      color:#001;
-      font-weight:700;
-      cursor:pointer;
-    }
+input, textarea {
+  padding:12px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.3);
+  color:white;
+}
+</style>
 
-    /* ───────────────── MAP SECTION ───────────────── */
-    #mapSection {
-      height: 100vh;
-      width: 100%;
-      position: relative;
-      z-index: 2;
-      padding: 20px;
-    }
-
-    #map {
-      height: 100%;
-      width: 100%;
-      border-radius: 12px;
-    }
-
-    /* ───────────────── FORM SECTION ───────────────── */
-    #formSection {
-      min-height: 100vh;
-      padding: 80px 20px;
-      position: relative;
-      z-index: 2;
-      color: var(--text);
-    }
-
-    form {
-      max-width: 500px;
-      margin: auto;
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
-    }
-
-    input, textarea {
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(0,0,0,0.3);
-      color: white;
-    }
-
-    button {
-      padding: 12px;
-      background: var(--teal);
-      border:none;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor:pointer;
-    }
-  </style>
 </head>
 
 <body>
 
-<!-- BACKGROUND -->
-<div class="stars"><canvas id="starCanvas"></canvas></div>
-<div class="glow glow-a"></div>
-<div class="glow glow-b"></div>
-
 <!-- HERO -->
 <section class="hero">
-  <h1 style="color:white; font-size:42px;">
-    Millions look up. Few report what they see.
-  </h1>
-
-  <div class="tagline">
-    AlienTerra is building the world’s registry of unexplained sightings
-  </div>
+  <h1>Millions look up. Few report what they see.</h1>
+  <div class="tagline">AlienTerra — live sightings intelligence network</div>
 
   <button class="cta" onclick="document.getElementById('mapSection').scrollIntoView({behavior:'smooth'})">
-    Report a Sighting
+    View Live Map
   </button>
 </section>
 
@@ -197,106 +116,135 @@
   <form id="sightingForm">
     <input id="title" placeholder="What did you see?" required />
     <textarea id="description" placeholder="Describe it..." required></textarea>
+    <input id="location" placeholder="Location (optional)" />
 
-    <input id="location" placeholder="Location (auto GPS coming next)" />
-
-    <button type="submit">Submit Report</button>
+    <button type="submit">Submit</button>
   </form>
 </section>
 
-<!-- SCRIPTS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-/* ───────────────── STARFIELD ───────────────── */
-const canvas = document.getElementById('starCanvas');
-const ctx = canvas.getContext('2d');
-let W,H,stars=[];
+/* ───────────────── SUPABASE INIT ───────────────── */
+const supabaseUrl = "https://tjvsqawdnvznchsgrvqu.supabase.co";
+const supabaseKey = "sb_publishable_ppVSsjXXHfKfZrWnzrXthA_yMReoGXo";
 
-function resize(){
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-}
-
-function initStars(){
-  stars = Array.from({length:150}, ()=>({
-    x:Math.random()*W,
-    y:Math.random()*H,
-    r:Math.random()*1.2,
-    a:Math.random()
-  }));
-}
-
-function draw(){
-  ctx.clearRect(0,0,W,H);
-  for(const s of stars){
-    ctx.beginPath();
-    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(200,220,255,${s.a})`;
-    ctx.fill();
-  }
-  requestAnimationFrame(draw);
-}
-
-resize(); initStars(); draw();
-window.addEventListener('resize', ()=>{resize(); initStars();});
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 
-/* ───────────────── MAP INIT ───────────────── */
+/* ───────────────── MAP ───────────────── */
 const map = L.map('map').setView([20,0], 2);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   attribution:'© OpenStreetMap'
 }).addTo(map);
 
-
-/* ───────────────── GPS (READY FOR NEXT PHASE) ───────────────── */
-let userLat = null;
-let userLng = null;
-
-navigator.geolocation?.getCurrentPosition(
-  (pos)=>{
-    userLat = pos.coords.latitude;
-    userLng = pos.coords.longitude;
-
-    map.setView([userLat,userLng], 6);
-
-    L.marker([userLat,userLng]).addTo(map)
-      .bindPopup("You are here");
-  },
-  (err)=>console.log("GPS not available yet:", err)
-);
+const markers = {};
 
 
-/* ───────────────── SUPABASE PLACEHOLDER ───────────────── */
-/*
-NEXT STEP (DO NOT RUN YET):
+/* ───────────────── LOAD SIGHTINGS ───────────────── */
+async function loadSightings() {
+  const { data, error } = await supabase
+    .from('sightings')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-import { createClient } from '@supabase/supabase-js'
+  if (error) {
+    console.error(error);
+    return;
+  }
 
-const supabase = createClient(
-  "YOUR_SUPABASE_URL",
-  "YOUR_SUPABASE_ANON_KEY"
-)
-*/
+  renderSightings(data);
+}
 
 
-/* ───────────────── FORM HANDLER (LOCAL ONLY FOR NOW) ───────────────── */
-document.getElementById('sightingForm').addEventListener('submit', (e)=>{
+/* ───────────────── RENDER MARKERS ───────────────── */
+function renderSightings(sightings) {
+  sightings.forEach(s => {
+    if (!s.lat || !s.lng) return;
+    if (markers[s.id]) return;
+
+    const marker = L.marker([s.lat, s.lng])
+      .addTo(map)
+      .bindPopup(`
+        <b>${s.title}</b><br/>
+        ${s.description || ''}<br/>
+        <small>${s.location || ''}</small>
+      `);
+
+    markers[s.id] = marker;
+  });
+}
+
+
+/* ───────────────── INSERT SIGHTING ───────────────── */
+async function insertSighting(data) {
+  const { error } = await supabase
+    .from('sightings')
+    .insert([data]);
+
+  if (error) {
+    console.error(error);
+    alert("Error submitting sighting");
+  }
+}
+
+
+/* ───────────────── FORM HANDLER ───────────────── */
+document.getElementById('sightingForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const data = {
     title: document.getElementById('title').value,
     description: document.getElementById('description').value,
     location: document.getElementById('location').value,
-    lat: userLat,
-    lng: userLng
+    lat: window.userLat,
+    lng: window.userLng
   };
 
-  console.log("Sighting captured (not sent yet):", data);
+  await insertSighting(data);
 
-  alert("Report captured locally. Next step: Supabase integration.");
+  alert("Sighting submitted!");
+
+  loadSightings();
 });
+
+
+/* ───────────────── GPS ───────────────── */
+window.userLat = null;
+window.userLng = null;
+
+navigator.geolocation.getCurrentPosition((pos) => {
+  window.userLat = pos.coords.latitude;
+  window.userLng = pos.coords.longitude;
+
+  map.setView([window.userLat, window.userLng], 6);
+
+  L.marker([window.userLat, window.userLng])
+    .addTo(map)
+    .bindPopup("You are here");
+});
+
+
+/* ───────────────── REALTIME UPDATES ───────────────── */
+supabase
+  .channel('sightings-live')
+  .on(
+    'postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'sightings' },
+    (payload) => {
+      renderSightings([payload.new]);
+    }
+  )
+  .subscribe();
+
+
+/* ───────────────── INIT ───────────────── */
+loadSightings();
+
 </script>
 
 </body>
