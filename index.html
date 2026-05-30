@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AlienTerra</title>
+
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#050d17;
+    color:white;
+}
+
+header{
+    text-align:center;
+    padding:40px 20px;
+}
+
+h1{
+    font-size:3rem;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    color:#9ac4ff;
+}
+
+#map{
+    height:500px;
+    width:100%;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:30px;
+}
+
+form{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+input, textarea{
+    padding:12px;
+    border:none;
+    border-radius:8px;
+}
+
+button{
+    padding:14px;
+    border:none;
+    border-radius:8px;
+    background:#1b78ff;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+.success{
+    color:#63ff8f;
+}
+
+</style>
+</head>
+<body>
+
+<header>
+
+<h1>Millions look up. Few report what they see.</h1>
+
+<p class="subtitle">
+AlienTerra is building the world's largest registry of unexplained sightings.
+</p>
+
+</header>
+
+<div id="map"></div>
+
+<div class="container">
+
+<h2>Report a Sighting</h2>
+
+<form id="sightingForm">
+
+<input
+type="text"
+id="address"
+placeholder="Address"
+/>
+
+<input
+type="datetime-local"
+id="sighting_time"
+/>
+
+<textarea
+id="description"
+rows="6"
+placeholder="Describe what you witnessed..."
+required
+></textarea>
+
+<input
+type="email"
+id="email"
+placeholder="Email (optional)"
+/>
+
+<input
+type="hidden"
+id="latitude"
+/>
+
+<input
+type="hidden"
+id="longitude"
+/>
+
+<button type="button" onclick="getLocation()">
+Use My GPS Location
+</button>
+
+<button type="submit">
+Submit Sighting
+</button>
+
+</form>
+
+<p id="message"></p>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL =
+"https://tjvsqawdnvznchsgrvqu.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_ppVSsjXXHfKfZrWnzrXthA_yMReoGXo";
+
+const supabase =
+window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+const map = L.map('map').setView([20,0],2);
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+maxZoom:19
+}
+).addTo(map);
+
+loadSightings();
+
+async function loadSightings(){
+
+    const { data, error } = await supabase
+        .from('sightings')
+        .select('*')
+        .eq('status','approved');
+
+    if(error){
+        console.error(error);
+        return;
+    }
+
+    data.forEach(row => {
+
+        L.marker([
+            row.latitude,
+            row.longitude
+        ])
+        .addTo(map)
+        .bindPopup(`
+            <strong>Sighting</strong><br>
+            ${row.description}
+        `);
+
+    });
+
+}
+
+function getLocation(){
+
+    if(!navigator.geolocation){
+        alert("GPS not supported");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(position){
+
+            document.getElementById('latitude').value =
+                position.coords.latitude;
+
+            document.getElementById('longitude').value =
+                position.coords.longitude;
+
+            alert("Location captured.");
+
+        },
+        function(){
+            alert("Unable to get location.");
+        }
+    );
+
+}
+
+document
+.getElementById('sightingForm')
+.addEventListener('submit', async function(e){
+
+    e.preventDefault();
+
+    const payload = {
+
+        address:
+            document.getElementById('address').value,
+
+        latitude:
+            parseFloat(
+                document.getElementById('latitude').value
+            ),
+
+        longitude:
+            parseFloat(
+                document.getElementById('longitude').value
+            ),
+
+        sighting_time:
+            document.getElementById('sighting_time').value,
+
+        description:
+            document.getElementById('description').value,
+
+        email:
+            document.getElementById('email').value,
+
+        status:'pending'
+    };
+
+    const { error } = await supabase
+        .from('sightings')
+        .insert(payload);
+
+    if(error){
+
+        console.error(error);
+
+        document.getElementById('message').innerHTML =
+            "Submission failed.";
+
+        return;
+    }
+
+    document.getElementById('message').innerHTML =
+        "Sighting submitted successfully.";
+
+    document.getElementById('sightingForm').reset();
+
+});
+
+</script>
+
+</body>
+</html>
