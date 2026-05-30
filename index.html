@@ -1,156 +1,336 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AlienTerra</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AlienTerra</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    :root {
+      --bg:        #04101f;
+      --bg2:       #071828;
+      --blue-dk:   #042C53;
+      --blue-mid:  #185FA5;
+      --blue-lt:   #378ADD;
+      --teal-dk:   #0F6E56;
+      --teal-mid:  #1D9E75;
+      --teal-lt:   #5DCAA5;
+      --text:      #E6F1FB;
+      --muted:     #85B7EB;
+      --mono:      'Space Mono', monospace;
+      --sans:      'Barlow', sans-serif;
+    }
 
-<style>
-html, body {
-  margin:0;
-  height:100%;
-  background:#04101f;
-  font-family: Arial;
-  color:white;
-}
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
 
-#map {
-  height: 60vh;
-  width: 100%;
-}
+    body {
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--sans);
+    }
 
-section {
-  padding: 20px;
-}
+    /* ── Star field ── */
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .stars canvas { width: 100%; height: 100%; }
 
-.row {
-  display:flex;
-  gap:10px;
-}
+    /* ── Ambient glow blobs ── */
+    .glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glow-a {
+      width: 500px; height: 500px;
+      background: rgba(24, 95, 165, 0.18);
+      top: -100px; left: -100px;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .glow-b {
+      width: 400px; height: 400px;
+      background: rgba(29, 158, 117, 0.14);
+      bottom: -80px; right: -80px;
+      animation: drift 22s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes drift {
+      from { transform: translate(0, 0); }
+      to   { transform: translate(40px, 30px); }
+    }
 
-input {
-  flex:1;
-  padding:10px;
-}
+    /* ── Scanline overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,0.07) 3px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
 
-button {
-  padding:10px;
-  background:#5DCAA5;
-  border:none;
-  cursor:pointer;
-}
-</style>
+    /* ── Logo container ── */
+    .logo-wrap {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: rise 1.2s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    svg.logo {
+      width: min(520px, 90vw);
+      height: auto;
+      overflow: visible;
+    }
+
+    /* ── Ring spin ── */
+    .ring-group {
+      transform-origin: 200px 230px;
+      animation: ringTilt 40s linear infinite;
+    }
+    @keyframes ringTilt {
+      from { transform: rotateX(70deg) rotateZ(0deg); }
+      to   { transform: rotateX(70deg) rotateZ(360deg); }
+    }
+
+    /* ── Dot pulse ── */
+    .orb-dot {
+      animation: orbPulse 3s ease-in-out infinite;
+    }
+    @keyframes orbPulse {
+      0%, 100% { opacity: 1; r: 5; }
+      50%       { opacity: 0.5; r: 3; }
+    }
+
+    /* ── Corner glyph blink ── */
+    .glyph { animation: blink 5s ease-in-out infinite; }
+    @keyframes blink {
+      0%, 90%, 100% { opacity: 0.4; }
+      95%            { opacity: 1; }
+    }
+
+    /* ── Status bar below logo ── */
+    .status-bar {
+      margin-top: 4.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.9s forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .status-item {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--teal-lt);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(93,202,165,.5); }
+      50%       { opacity: 0.6; box-shadow: 0 0 0 5px rgba(93,202,165,0); }
+    }
+    .status-sep {
+      width: 1px; height: 14px;
+      background: rgba(133,183,235,0.2);
+    }
+  </style>
 </head>
-
 <body>
 
-<h2 style="text-align:center;padding:20px;">
-  AlienTerra Live Map
-</h2>
+  <!-- Stars -->
+  <div class="stars"><canvas id="starCanvas"></canvas></div>
 
-<div id="map"></div>
+  <!-- Glow blobs -->
+  <div class="glow glow-a"></div>
+  <div class="glow glow-b"></div>
 
-<section>
-  <div class="row">
-    <input id="address" placeholder="Address will auto-fill" readonly />
-    <button id="gpsBtn">📍 GPS</button>
+  <!-- Logo -->
+  <div class="logo-wrap">
+    <svg class="logo" viewBox="0 0 520 380" role="img" xmlns="http://www.w3.org/2000/svg">
+      <title>AlienTerra</title>
+      <desc>AlienTerra technology holding firm logo</desc>
+
+      <defs>
+        <clipPath id="pClip"><circle cx="155" cy="158" r="68"/></clipPath>
+      </defs>
+
+      <!-- ── Planet ── -->
+      <!-- Back ring half -->
+      <ellipse cx="155" cy="175" rx="104" ry="19" fill="none" stroke="#042C53" stroke-width="2.5"/>
+
+      <!-- Planet body -->
+      <circle cx="155" cy="158" r="68" fill="#185FA5"/>
+      <!-- Lighter cap -->
+      <ellipse cx="155" cy="120" rx="68" ry="36" fill="#378ADD" clip-path="url(#pClip)"/>
+
+      <!-- Continents -->
+      <g clip-path="url(#pClip)">
+        <ellipse cx="146" cy="154" rx="24" ry="15" fill="#0F6E56" opacity=".9"/>
+        <ellipse cx="176" cy="168" rx="14" ry="9"  fill="#1D9E75" opacity=".85"/>
+        <ellipse cx="127" cy="174" rx="9"  ry="6"  fill="#0F6E56" opacity=".7"/>
+        <ellipse cx="163" cy="130" rx="15" ry="8"  fill="#1D9E75" opacity=".65"/>
+      </g>
+
+      <!-- Planet highlight -->
+      <circle cx="130" cy="137" r="14" fill="white" opacity=".06"/>
+
+      <!-- Front ring half -->
+      <ellipse cx="155" cy="175" rx="104" ry="19" fill="none"
+               stroke="#1D9E75" stroke-width="2.2"
+               stroke-dasharray="240 180" stroke-dashoffset="-90"/>
+
+      <!-- Orbiting dot -->
+      <circle class="orb-dot" cx="52" cy="173" r="5" fill="#5DCAA5"/>
+      <circle cx="50.5" cy="171" r="2" fill="white" opacity=".45"/>
+      <!-- Second dot -->
+      <circle cx="255" cy="181" r="3.5" fill="#5DCAA5" opacity=".55"/>
+
+      <!-- ── Circuit lines ── -->
+      <g fill="none" stroke="#378ADD" stroke-width="0.9" opacity=".7">
+        <polyline points="220,130 238,130 238,115 255,115"/>
+        <polyline points="220,148 242,148 242,161 258,161"/>
+        <polyline points="220,172 235,172 235,190 252,190"/>
+      </g>
+      <circle cx="255" cy="115" r="2.5" fill="#378ADD"/>
+      <circle cx="258" cy="161" r="2.5" fill="#378ADD"/>
+      <circle cx="252" cy="190" r="2.5" fill="#378ADD"/>
+      <circle cx="238" cy="130" r="1.8" fill="#378ADD" opacity=".55"/>
+      <circle cx="235" cy="172" r="1.8" fill="#378ADD" opacity=".55"/>
+
+      <!-- ── Wordmark ── -->
+      <!-- alien -->
+      <text x="272" y="152"
+            font-family="'Barlow', 'Helvetica Neue', Arial, sans-serif"
+            font-size="56" font-weight="700" letter-spacing="-1.5"
+            fill="#E6F1FB">alien</text>
+      <!-- terra -->
+      <text x="272" y="206"
+            font-family="'Barlow', 'Helvetica Neue', Arial, sans-serif"
+            font-size="56" font-weight="300" letter-spacing="-1.5"
+            fill="#5DCAA5">terra</text>
+
+      <!-- Divider -->
+      <rect x="272" y="160" width="238" height="1.5" fill="#5DCAA5" opacity=".3" rx="1"/>
+
+<!-- Tagline -->
+<text x="200" y="285"
+      font-family="'Space Mono', monospace"
+      font-size="12" 
+      letter-spacing="2"
+      fill="#378ADD">
+
+  <tspan x="155" dy="0">Alienterra is a boutique technology firm.</tspan>
+  <tspan x="155" dy="24">We create and bring bold ideas to life.</tspan>
+  <tspan x="155" dy="24">Check back soon for an announcement....</tspan>
+
+</text>
+
+
+
+      <!-- Decorative hex trio -->
+      <g opacity=".12">
+        <polygon points="472,262 482,256 492,262 492,274 482,280 472,274" fill="#071828" stroke="#378ADD" stroke-width="0.8"/>
+        <polygon points="492,262 502,256 512,262 512,274 502,280 492,274" fill="#071828" stroke="#378ADD" stroke-width="0.8"/>
+        <polygon points="482,274 492,268 502,274 502,286 492,292 482,286" fill="#071828" stroke="#378ADD" stroke-width="0.8"/>
+      </g>
+
+      <!-- Alien glyph accent -->
+      <g class="glyph" stroke="#5DCAA5" stroke-width="1.4" fill="none" opacity=".4">
+        <circle cx="480" cy="52" r="9"/>
+        <line x1="480" y1="43" x2="480" y2="36"/>
+        <line x1="473.8" y1="55.5" x2="468" y2="61"/>
+        <line x1="486.2" y1="55.5" x2="492" y2="61"/>
+        <circle cx="476" cy="49" r="1.8" fill="#5DCAA5"/>
+        <circle cx="484" cy="49" r="1.8" fill="#5DCAA5"/>
+      </g>
+    </svg>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="status-item"><span class="status-dot"></span>Online</div>
+      <div class="status-sep"></div>
+      <div class="status-item">Est. 2013</div>
+      <div class="status-sep"></div>
+      <div class="status-item">alienterra.com</div>
+    </div>
   </div>
-</section>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const canvas = document.getElementById('starCanvas');
+    const ctx    = canvas.getContext('2d');
+    let W, H, stars = [];
 
-<script>
-/* ================= MAP ================= */
-const map = L.map('map').setView([20,0], 2);
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap'
-}).addTo(map);
+    function mkStars() {
+      stars = Array.from({ length: 220 }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.2 + 0.2,
+        a: Math.random(),
+        sp: Math.random() * 0.008 + 0.003,
+        ph: Math.random() * Math.PI * 2
+      }));
+    }
 
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      for (const s of stars) {
+        const alpha = s.a * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200,225,255,${alpha})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
 
-/* ================= SUPABASE (YOUR KEYS) ================= */
-const supabase = window.supabase.createClient(
-  "https://tjvsqawdnvznchsgrvqu.supabase.co",
-  "sb_publishable_ppVSsjXXHfKfZrWnzrXthA_yMReoGXo"
-);
-
-
-/* ================= GPS ================= */
-let userLat = null;
-let userLng = null;
-
-document.getElementById("gpsBtn").onclick = () => {
-
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-
-    userLat = pos.coords.latitude;
-    userLng = pos.coords.longitude;
-
-    map.setView([userLat, userLng], 12);
-
-    L.marker([userLat, userLng])
-      .addTo(map)
-      .bindPopup("You are here")
-      .openPopup();
-
-    const addr = await reverseGeocode(userLat, userLng);
-    document.getElementById("address").value = addr;
-
-  }, (err) => {
-    alert("GPS error: " + err.message);
-  }, {
-    enableHighAccuracy:true
-  });
-};
-
-
-/* ================= REVERSE GEOCODE ================= */
-async function reverseGeocode(lat, lng) {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-    );
-    const data = await res.json();
-    return data.display_name || "Unknown location";
-  } catch (e) {
-    return "Unknown location";
-  }
-}
-
-
-/* ================= LOAD FROM SUPABASE ================= */
-async function loadSightings() {
-
-  const { data, error } = await supabase
-    .from("sightings")
-    .select("*");
-
-  if (error) {
-    console.log("Supabase error:", error);
-    return;
-  }
-
-  console.log("Loaded sightings:", data);
-
-  data.forEach(s => {
-    if (!s.lat || !s.lng) return;
-
-    L.marker([s.lat, s.lng])
-      .addTo(map)
-      .bindPopup(`
-        <b>${s.title || "No title"}</b><br/>
-        ${s.description || ""}<br/>
-        <small>${s.address || ""}</small>
-      `);
-  });
-}
-
-loadSightings();
-
-</script>
-
+    resize();
+    mkStars();
+    window.addEventListener('resize', () => { resize(); mkStars(); });
+    requestAnimationFrame(draw);
+  </script>
 </body>
 </html>
