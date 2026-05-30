@@ -5,253 +5,191 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AlienTerra</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet"/>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
-
 <style>
+* { margin:0; padding:0; box-sizing:border-box; }
 
-:root{
+:root {
   --bg:#04101f;
+  --blue:#185FA5;
+  --green:#1D9E75;
   --text:#E6F1FB;
   --muted:#85B7EB;
-  --blue:#185FA5;
-  --teal:#1D9E75;
   --mono:'Space Mono', monospace;
   --sans:'Barlow', sans-serif;
 }
 
-*{box-sizing:border-box;margin:0;padding:0;}
-
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:var(--sans);
+/* FIX: allow scrolling */
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
 }
 
-/* HERO (your existing section) */
-.hero{
-  height:100vh;
+/* STAR BACKGROUND */
+.stars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* HERO */
+.hero {
+  min-height: 100vh;
   display:flex;
   align-items:center;
   justify-content:center;
+  flex-direction:column;
   text-align:center;
-  position:relative;
+  padding: 40px;
+  position: relative;
+  z-index: 2;
 }
 
-/* FIX: no more overflow hidden */
+h1 {
+  font-size: 48px;
+  font-weight: 700;
+}
 
-/* APP SECTION */
-.app{
-  padding:60px 20px;
-  max-width:1100px;
-  margin:auto;
+.sub {
+  margin-top: 10px;
+  color: var(--muted);
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+/* CTA BUTTON */
+.cta {
+  margin-top: 30px;
+  padding: 14px 22px;
+  border-radius: 10px;
+  border: 1px solid var(--green);
+  background: rgba(29,158,117,0.15);
+  color: var(--text);
+  font-family: var(--mono);
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.cta:hover {
+  transform: translateY(-2px);
+  background: rgba(29,158,117,0.25);
+}
+
+/* SECTIONS */
+.section {
+  min-height: 100vh;
+  padding: 80px 40px;
+  position: relative;
+  z-index: 2;
+}
+
+.section h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
 }
 
 /* MAP */
-#map{
-  height:520px;
-  border-radius:16px;
-  margin-top:30px;
-  border:1px solid rgba(255,255,255,0.1);
-}
-
-/* STATS */
-.stats{
-  display:flex;
-  justify-content:space-between;
-  margin:30px 0;
-  font-family:var(--mono);
-  font-size:12px;
-  color:var(--muted);
+#map {
+  height: 60vh;
+  border: 1px solid #185FA5;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
 }
 
 /* FORM */
-form{
-  display:grid;
-  gap:12px;
-  margin-top:40px;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 500px;
 }
 
-input, textarea{
-  padding:12px;
-  border-radius:10px;
-  border:none;
+input, textarea {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #2a4d6d;
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
 }
 
-button{
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  background:var(--blue);
-  color:white;
-  cursor:pointer;
+button.submit {
+  padding: 12px;
+  background: var(--green);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
 }
-
-button:hover{opacity:0.85;}
-
-.section-title{
-  font-size:20px;
-  margin-top:30px;
-}
-
 </style>
 </head>
 
 <body>
 
+<div class="stars"></div>
+
 <!-- HERO -->
 <div class="hero">
-  <div>
-    <h1>Millions look up. Few report what they see.</h1>
-    <p style="color:var(--muted);margin-top:10px;">
-      AlienTerra is building the world’s largest registry of unexplained sightings.
-    </p>
-    <button style="margin-top:20px;">Report a Sighting</button>
+  <h1>Millions look up. Few report what they see.</h1>
+
+  <div class="sub">
+    AlienTerra is building the world’s largest registry of unexplained sightings.
+    Every report is mapped, tracked, and investigated.
   </div>
+
+  <button class="cta" id="ctaBtn">
+    Report a Sighting
+  </button>
 </div>
 
-<!-- APP -->
-<div class="app">
-
-<div class="stats">
-  <div>14,382 Sightings</div>
-  <div>92 Countries</div>
-  <div>37 Active Investigations</div>
+<!-- MAP SECTION -->
+<div class="section" id="mapSection">
+  <h2>Live Global Sightings Map</h2>
+  <div id="map"></div>
 </div>
 
-<div id="map"></div>
+<!-- FORM SECTION -->
+<div class="section" id="formSection">
+  <h2>Report a Sighting</h2>
 
-<h2 class="section-title">Report a Sighting</h2>
-
-<form id="form">
-
-<input id="address" placeholder="Enter address"/>
-
-<button type="button" onclick="getGPS()">Use My GPS Location</button>
-
-<input type="datetime-local" id="time"/>
-
-<textarea id="desc" rows="5" placeholder="Describe what you saw"></textarea>
-
-<input type="email" id="email" placeholder="Email (optional)"/>
-
-<input type="hidden" id="lat"/>
-<input type="hidden" id="lng"/>
-
-<button type="submit">Submit</button>
-
-</form>
-
-<p id="msg"></p>
-
+  <form>
+    <input placeholder="Your name"/>
+    <input placeholder="Location (or use GPS later)"/>
+    <textarea rows="5" placeholder="Describe what you saw..."></textarea>
+    <button class="submit">Submit Sighting</button>
+  </form>
 </div>
-
-<!-- LIBS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- GOOGLE PLACES -->
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY&libraries=places"></script>
 
 <script>
-
-/* SUPABASE */
-const supabase = window.supabase.createClient(
-  "https://tjvsqawdnvznchsgrvqu.supabase.co",
-  "sb_publishable_ppVSsjXXHfKfZrWnzrXthA_yMReoGXo"
-);
-
-/* MAP */
-const map = L.map('map').setView([20,0],2);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  maxZoom:19
-}).addTo(map);
-
-const cluster = L.markerClusterGroup();
-map.addLayer(cluster);
-
-let heatData = [];
-
-/* LOAD DATA */
-async function load(){
-  const {data} = await supabase
-    .from('sightings')
-    .select('*')
-    .eq('status','approved');
-
-  data.forEach(r=>{
-    const m = L.marker([r.latitude,r.longitude]);
-    m.bindPopup(r.description || "Sighting");
-    cluster.addLayer(m);
-
-    heatData.push([r.latitude,r.longitude,1]);
-  });
-
-  L.heatLayer(heatData,{radius:25}).addTo(map);
-}
-load();
-
-/* GPS FIXED */
-async function getGPS(){
-
-  if(!navigator.geolocation){
-    alert("No GPS");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(async pos=>{
-
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-
-    document.getElementById("lat").value = lat;
-    document.getElementById("lng").value = lng;
-
-    // reverse geocode
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-    );
-
-    const d = await r.json();
-
-    document.getElementById("address").value =
-      d.display_name || "";
-
-    alert("Location captured");
-
-  });
-
-}
-
-/* GOOGLE AUTOCOMPLETE */
-const ac = new google.maps.places.Autocomplete(
-  document.getElementById("address")
-);
-
-/* SUBMIT */
-document.getElementById("form").addEventListener("submit",async e=>{
-  e.preventDefault();
-
-  await supabase.from("sightings").insert({
-    address:document.getElementById("address").value,
-    latitude:parseFloat(document.getElementById("lat").value),
-    longitude:parseFloat(document.getElementById("lng").value),
-    sighting_time:document.getElementById("time").value,
-    description:document.getElementById("desc").value,
-    email:document.getElementById("email").value,
-    status:"pending"
-  });
-
-  document.getElementById("msg").innerText="Submitted!";
+/* CTA SCROLL */
+document.getElementById("ctaBtn").addEventListener("click", () => {
+  document.getElementById("mapSection")
+    .scrollIntoView({ behavior: "smooth" });
 });
 
+/* SIMPLE STARFIELD */
+const stars = document.querySelector('.stars');
+
+function createStars() {
+  for (let i=0;i<120;i++){
+    const s = document.createElement("div");
+    s.style.position="absolute";
+    s.style.width="2px";
+    s.style.height="2px";
+    s.style.background="white";
+    s.style.top=Math.random()*100+"%";
+    s.style.left=Math.random()*100+"%";
+    s.style.opacity=Math.random();
+    stars.appendChild(s);
+  }
+}
+createStars();
 </script>
 
 </body>
