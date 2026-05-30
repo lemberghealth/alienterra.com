@@ -104,7 +104,24 @@ h1 {
   border-radius: 12px;
   background: rgba(255,255,255,0.03);
 }
+<!-- MAP SECTION -->
+<section id="mapSection" style="height: 100vh; width: 100%; position: relative; z-index: 2;">
+  <div id="map" style="height: 100%; width: 100%;"></div>
+</section>
 
+<!-- FORM SECTION -->
+<section id="formSection" style="min-height: 100vh; padding: 80px 20px; position: relative; z-index: 2;">
+  <h2 style="color: var(--text); font-family: var(--sans);">Report a Sighting</h2>
+
+  <form id="sightingForm">
+    <input id="title" placeholder="What did you see?" />
+    <textarea id="description" placeholder="Describe it..."></textarea>
+
+    <input id="location" placeholder="Location (auto or manual)" />
+
+    <button type="submit">Submit Report</button>
+  </form>
+</section>
 /* FORM */
 form {
   display: flex;
