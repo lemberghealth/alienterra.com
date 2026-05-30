@@ -1,214 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AlienTerra</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AlienTerra</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet"/>
 
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
+  <!-- Leaflet (map engine) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-:root {
-  --bg:#04101f;
-  --blue:#185FA5;
-  --green:#1D9E75;
-  --text:#E6F1FB;
-  --muted:#85B7EB;
-  --mono:'Space Mono', monospace;
-  --sans:'Barlow', sans-serif;
-}
-html, body {
-  overflow: auto;
-}
-/* FIX: allow scrolling */
-html, body {
-  height: 100%;
-  width: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
-}
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* STAR BACKGROUND */
-.stars {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
+    :root {
+      --bg:#04101f;
+      --text:#E6F1FB;
+      --muted:#85B7EB;
+      --teal:#5DCAA5;
+      --blue:#185FA5;
+      --sans:'Barlow', sans-serif;
+      --mono:'Space Mono', monospace;
+    }
 
-/* HERO */
-.hero {
-  min-height: 100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  text-align:center;
-  padding: 40px;
-  position: relative;
-  z-index: 2;
-}
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: auto; /* FIX: enable app flow */
+      background: var(--bg);
+      font-family: var(--sans);
+    }
 
-h1 {
-  font-size: 48px;
-  font-weight: 700;
-}
+    /* ───────────────── HERO BACKGROUND ───────────────── */
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-.sub {
-  margin-top: 10px;
-  color: var(--muted);
-  max-width: 600px;
-  line-height: 1.5;
-}
+    .glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-/* CTA BUTTON */
-.cta {
-  margin-top: 30px;
-  padding: 14px 22px;
-  border-radius: 10px;
-  border: 1px solid var(--green);
-  background: rgba(29,158,117,0.15);
-  color: var(--text);
-  font-family: var(--mono);
-  cursor:pointer;
-  transition:0.2s;
-}
+    .glow-a {
+      width: 500px;
+      height: 500px;
+      background: rgba(24,95,165,0.18);
+      top: -100px;
+      left: -100px;
+    }
 
-.cta:hover {
-  transform: translateY(-2px);
-  background: rgba(29,158,117,0.25);
-}
+    .glow-b {
+      width: 400px;
+      height: 400px;
+      background: rgba(93,202,165,0.14);
+      bottom: -80px;
+      right: -80px;
+    }
 
-/* SECTIONS */
-.section {
-  min-height: 100vh;
-  padding: 80px 40px;
-  position: relative;
-  z-index: 2;
-}
+    body::after {
+      content:'';
+      position: fixed;
+      inset:0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,0.07) 3px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events:none;
+      z-index:1;
+    }
 
-.section h2 {
-  font-size: 28px;
-  margin-bottom: 20px;
-}
+    /* ───────────────── HERO ───────────────── */
+    .hero {
+      min-height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position: relative;
+      z-index:2;
+      text-align:center;
+      flex-direction:column;
+      padding: 40px;
+    }
 
-/* MAP */
-#map {
-  height: 60vh;
-  border: 1px solid #185FA5;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.03);
-}
-<!-- MAP SECTION -->
-<section id="mapSection" style="height: 100vh; width: 100%; position: relative; z-index: 2;">
-  <div id="map" style="height: 100%; width: 100%;"></div>
-</section>
+    .tagline {
+      color: var(--muted);
+      font-family: var(--mono);
+      margin-top: 20px;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
 
-<!-- FORM SECTION -->
-<section id="formSection" style="min-height: 100vh; padding: 80px 20px; position: relative; z-index: 2;">
-  <h2 style="color: var(--text); font-family: var(--sans);">Report a Sighting</h2>
+    .cta {
+      margin-top: 30px;
+      padding: 14px 22px;
+      background: var(--teal);
+      border:none;
+      border-radius: 8px;
+      color:#001;
+      font-weight:700;
+      cursor:pointer;
+    }
 
-  <form id="sightingForm">
-    <input id="title" placeholder="What did you see?" />
-    <textarea id="description" placeholder="Describe it..."></textarea>
+    /* ───────────────── MAP SECTION ───────────────── */
+    #mapSection {
+      height: 100vh;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+      padding: 20px;
+    }
 
-    <input id="location" placeholder="Location (auto or manual)" />
+    #map {
+      height: 100%;
+      width: 100%;
+      border-radius: 12px;
+    }
 
-    <button type="submit">Submit Report</button>
-  </form>
-</section>
-/* FORM */
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 500px;
-}
+    /* ───────────────── FORM SECTION ───────────────── */
+    #formSection {
+      min-height: 100vh;
+      padding: 80px 20px;
+      position: relative;
+      z-index: 2;
+      color: var(--text);
+    }
 
-input, textarea {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #2a4d6d;
-  background: rgba(255,255,255,0.03);
-  color: var(--text);
-}
+    form {
+      max-width: 500px;
+      margin: auto;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
 
-button.submit {
-  padding: 12px;
-  background: var(--green);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-}
-</style>
+    input, textarea {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.3);
+      color: white;
+    }
+
+    button {
+      padding: 12px;
+      background: var(--teal);
+      border:none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor:pointer;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="stars"></div>
+<!-- BACKGROUND -->
+<div class="stars"><canvas id="starCanvas"></canvas></div>
+<div class="glow glow-a"></div>
+<div class="glow glow-b"></div>
 
 <!-- HERO -->
-<div class="hero">
-  <h1>Millions look up. Few report what they see.</h1>
+<section class="hero">
+  <h1 style="color:white; font-size:42px;">
+    Millions look up. Few report what they see.
+  </h1>
 
-  <div class="sub">
-    AlienTerra is building the world’s largest registry of unexplained sightings.
-    Every report is mapped, tracked, and investigated.
+  <div class="tagline">
+    AlienTerra is building the world’s registry of unexplained sightings
   </div>
 
-  <button class="cta" id="ctaBtn">
+  <button class="cta" onclick="document.getElementById('mapSection').scrollIntoView({behavior:'smooth'})">
     Report a Sighting
   </button>
-</div>
+</section>
 
-<!-- MAP SECTION -->
-<div class="section" id="mapSection">
-  <h2>Live Global Sightings Map</h2>
+<!-- MAP -->
+<section id="mapSection">
   <div id="map"></div>
-</div>
+</section>
 
-<!-- FORM SECTION -->
-<div class="section" id="formSection">
+<!-- FORM -->
+<section id="formSection">
   <h2>Report a Sighting</h2>
 
-  <form>
-    <input placeholder="Your name"/>
-    <input placeholder="Location (or use GPS later)"/>
-    <textarea rows="5" placeholder="Describe what you saw..."></textarea>
-    <button class="submit">Submit Sighting</button>
+  <form id="sightingForm">
+    <input id="title" placeholder="What did you see?" required />
+    <textarea id="description" placeholder="Describe it..." required></textarea>
+
+    <input id="location" placeholder="Location (auto GPS coming next)" />
+
+    <button type="submit">Submit Report</button>
   </form>
-</div>
+</section>
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-/* CTA SCROLL */
-document.getElementById("ctaBtn").addEventListener("click", () => {
-  document.getElementById("mapSection")
-    .scrollIntoView({ behavior: "smooth" });
-});
+/* ───────────────── STARFIELD ───────────────── */
+const canvas = document.getElementById('starCanvas');
+const ctx = canvas.getContext('2d');
+let W,H,stars=[];
 
-/* SIMPLE STARFIELD */
-const stars = document.querySelector('.stars');
-
-function createStars() {
-  for (let i=0;i<120;i++){
-    const s = document.createElement("div");
-    s.style.position="absolute";
-    s.style.width="2px";
-    s.style.height="2px";
-    s.style.background="white";
-    s.style.top=Math.random()*100+"%";
-    s.style.left=Math.random()*100+"%";
-    s.style.opacity=Math.random();
-    stars.appendChild(s);
-  }
+function resize(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
 }
-createStars();
+
+function initStars(){
+  stars = Array.from({length:150}, ()=>({
+    x:Math.random()*W,
+    y:Math.random()*H,
+    r:Math.random()*1.2,
+    a:Math.random()
+  }));
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  for(const s of stars){
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,220,255,${s.a})`;
+    ctx.fill();
+  }
+  requestAnimationFrame(draw);
+}
+
+resize(); initStars(); draw();
+window.addEventListener('resize', ()=>{resize(); initStars();});
+
+
+/* ───────────────── MAP INIT ───────────────── */
+const map = L.map('map').setView([20,0], 2);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© OpenStreetMap'
+}).addTo(map);
+
+
+/* ───────────────── GPS (READY FOR NEXT PHASE) ───────────────── */
+let userLat = null;
+let userLng = null;
+
+navigator.geolocation?.getCurrentPosition(
+  (pos)=>{
+    userLat = pos.coords.latitude;
+    userLng = pos.coords.longitude;
+
+    map.setView([userLat,userLng], 6);
+
+    L.marker([userLat,userLng]).addTo(map)
+      .bindPopup("You are here");
+  },
+  (err)=>console.log("GPS not available yet:", err)
+);
+
+
+/* ───────────────── SUPABASE PLACEHOLDER ───────────────── */
+/*
+NEXT STEP (DO NOT RUN YET):
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  "YOUR_SUPABASE_URL",
+  "YOUR_SUPABASE_ANON_KEY"
+)
+*/
+
+
+/* ───────────────── FORM HANDLER (LOCAL ONLY FOR NOW) ───────────────── */
+document.getElementById('sightingForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+
+  const data = {
+    title: document.getElementById('title').value,
+    description: document.getElementById('description').value,
+    location: document.getElementById('location').value,
+    lat: userLat,
+    lng: userLng
+  };
+
+  console.log("Sighting captured (not sent yet):", data);
+
+  alert("Report captured locally. Next step: Supabase integration.");
+});
 </script>
 
 </body>
